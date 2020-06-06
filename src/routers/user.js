@@ -4,6 +4,7 @@ const sharp = require('sharp');//Cropping and Formatting images
 
 const User = require('../models/user.js');
 const auth = require('../middleware/auth.js');
+const {sendWelcomingEmail, sendCancellationEmail} = require('../emails/account.js');
 
 const router = new express.Router();
 
@@ -14,6 +15,7 @@ router.post('/users', async(req, res) => {
     
     try {
         await user.save();
+        sendWelcomingEmail(user.name, user.email);
         const token = await user.generateAuthToken();
         res.status(201).send({user, token});
     } catch (e) {
@@ -93,6 +95,7 @@ router.delete('/users/me', auth, async(req, res) => {
         // }
         // res.send(user);
         await req.user.remove(); //Mongoose function
+        sendCancellationEmail(req.user.name, req.user.email);
         res.send(req.user);
     } catch (e) {
         res.status(500).send(e);
